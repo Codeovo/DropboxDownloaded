@@ -135,7 +135,6 @@ public class UploadCommand implements CommandExecutor {
         } else {
             commandSender.sendMessage(prefix + "You do not have permission to use that command.");
         }
-
         return false;
     }
 }
