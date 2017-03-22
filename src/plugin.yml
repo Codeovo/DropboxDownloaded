@@ -2,3 +2,7 @@ name: DropboxDL
 author: Codeovo
 version: 1.0.0
 main: io.codeovo.dropboxdl.DropboxDL
+
+commands:
+   upload:
+     description: Upload a world or schematic to Dropbox.
