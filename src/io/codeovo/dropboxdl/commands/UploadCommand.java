@@ -61,7 +61,7 @@ public class UploadCommand implements CommandExecutor {
                                                 + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
                                                 .createSharedLinkWithSettings("/" + fileToUpload + ".zip",
                                                         new SharedLinkSettings(RequestedVisibility.PUBLIC,
-                                                                null, null)));
+                                                                null, null)).getUrl());
                                     } catch (DbxException | IOException e) {
                                         commandSender.sendMessage(prefix
                                                 + "An error occurred, details logged to console!");
@@ -107,7 +107,7 @@ public class UploadCommand implements CommandExecutor {
                                                 + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
                                                 .createSharedLinkWithSettings("/" + fileToUpload + ".zip",
                                                         new SharedLinkSettings(RequestedVisibility.PUBLIC,
-                                                                null, null)));
+                                                                null, null)).getUrl());
                                     } catch (DbxException | IOException e) {
                                         commandSender.sendMessage(prefix
                                                 + "An error occurred, details logged to console!");
