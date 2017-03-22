@@ -40,12 +40,15 @@ public class FileUtils {
 
     private static void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) throws IOException {
         File folder = new File(srcFolder);
+        String[] folderList = folder.list();
 
-        for (String fileName : folder.list()) {
-            if (path.equals("")) {
-                addFileToZip(folder.getName(), srcFolder + "/" + fileName, zip);
-            } else {
-                addFileToZip(path + "/" + folder.getName(), srcFolder + "/" + fileName, zip);
+        if (folderList != null) {
+            for (String fileName : folderList) {
+                if (path.equals("")) {
+                    addFileToZip(folder.getName(), srcFolder + "/" + fileName, zip);
+                } else {
+                    addFileToZip(path + "/" + folder.getName(), srcFolder + "/" + fileName, zip);
+                }
             }
         }
     }
@@ -56,11 +59,14 @@ public class FileUtils {
                 dest.mkdir();
             }
 
-            String files[] = src.list();
-            for (String file : files) {
-                File srcFile = new File(src, file);
-                File destFile = new File(dest, file);
-                copyFolder(srcFile,destFile);
+            String[] fileList = src.list();
+
+            if (fileList != null) {
+                for (String file : fileList) {
+                    File srcFile = new File(src, file);
+                    File destFile = new File(dest, file);
+                    copyFolder(srcFile, destFile);
+                }
             }
         } else {
             InputStream in = new FileInputStream(src);
