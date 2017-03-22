@@ -1,10 +1,14 @@
 package io.codeovo.dropboxdl.commands;
 
+import com.dropbox.core.DbxException;
+import com.dropbox.core.v2.files.WriteMode;
+import com.dropbox.core.v2.sharing.RequestedVisibility;
+import com.dropbox.core.v2.sharing.SharedLinkSettings;
+
 import io.codeovo.dropboxdl.DropboxDL;
 import io.codeovo.dropboxdl.utils.FileUtils;
 
-import com.dropbox.core.v2.files.FileMetadata;
-
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -23,57 +27,62 @@ public class UploadCommand implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
+    public boolean onCommand(final CommandSender commandSender, Command command, String s, String[] strings) {
         if (commandSender.isOp() || commandSender.hasPermission("dropboxdl.use")) {
             if (strings.length == 1 && strings[0].contains(":")) {
                 String[] split = strings[0].split(":");
-                String fileToUpload;
+                final String fileToUpload;
 
                 if (split[0].equalsIgnoreCase("world") && split[1] != null) {
-                    fileToUpload = split[1];
+                    try {
+                        fileToUpload = split[1];
 
-                    File world = new File(serverDirectory + "/" + fileToUpload);
-                    if (world.exists()) {
-                        File worldModified = new File(serverDirectory + "/" + fileToUpload + "_copy");
-                        commandSender.sendMessage(prefix + "Uploading " + fileToUpload + ", link will be provided on completion!");
+                        File world = new File(serverDirectory + "/" + fileToUpload);
+                        if (world.exists()) {
+                            File worldModified = new File(serverDirectory + "/" + fileToUpload + "_copy");
+                            commandSender.sendMessage(prefix + "Uploading " + fileToUpload
+                                    + ", link will be provided on completion!");
 
-                        try {
                             FileUtils.copyFolder(world, worldModified);
-                        } catch (IOException e) {
-                            commandSender.sendMessage(prefix + "A fatal error occurred during duplication, check console!");
-                            e.printStackTrace();
-                        }
+                            FileUtils.zipFolder(serverDirectory + "/" + fileToUpload + "_copy",
+                                    serverDirectory + "/" + fileToUpload + "_ready.zip");
 
-                        try {
-                            FileUtils.zipFolder(serverDirectory + "/" + fileToUpload + "_copy", serverDirectory + "/" + fileToUpload + "_ready.zip");
-                        } catch (Exception e) {
-                            commandSender.sendMessage(prefix + "A fatal error occurred during zip, check console!");
-                            e.printStackTrace();
-                        }
+                            File inputFile = new File(serverDirectory + "/" + fileToUpload + "_ready.zip");
+                            final InputStream in = new FileInputStream(inputFile);
 
-                        File inputFile = new File(serverDirectory + "/" + fileToUpload + "_ready.zip");
-                        try {
-                            try (InputStream in = new FileInputStream(inputFile)) {
-                                FileMetadata metadata = client.files().uploadBuilder("/" + fileToUpload + ".zip")
-                                        .uploadAndFinish(in);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        }
+                            Bukkit.getScheduler().runTaskAsynchronously(DropboxDL.getInstance(), new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        dropboxDL.getClient().files().uploadBuilder("/" + fileToUpload + ".zip")
+                                                .withMode(WriteMode.OVERWRITE).uploadAndFinish(in);
 
-                        try {
-                            commandSender.sendMessage(prefix + "Uploaded! Download at " + ChatColor.DARK_AQUA + downloadLink.client.createShareableUrl("/" + fileToUpload + ".zip"));
-                        } catch (DbxException e) {
-                            e.printStackTrace();
-                            commandSender.sendMessage(prefix + "A fatal error has occurred, check your console for more details.");
-                        }
+                                        commandSender.sendMessage(prefix + "Uploaded! Download at "
+                                                + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
+                                                .createSharedLinkWithSettings("/" + fileToUpload + ".zip",
+                                                        new SharedLinkSettings(RequestedVisibility.PUBLIC,
+                                                                null, null)));
+                                    } catch (DbxException | IOException e) {
+                                        commandSender.sendMessage(prefix
+                                                + "An error occurred, details logged to console!");
+                                        e.printStackTrace();
+                                    } finally {
+                                        try {
+                                            in.close();
+                                        } catch (IOException ignored) {}
+                                    }
+                                }
+                            });
 
-                        worldModified.delete();
-                        inputFile.delete();
-                    } else {
-                        commandSender.sendMessage(prefix + "World not found, check your parameters!");
+                            worldModified.delete();
+                            inputFile.delete();
+                        } else {
+                            commandSender.sendMessage(prefix + "World not found, check your parameters!");
+                            return true;
+                        }
+                    } catch (IOException e) {
+                        commandSender.sendMessage(prefix + "An error occurred, details logged to console!");
+                        e.printStackTrace();
                     }
                 } else if (split[0].equalsIgnoreCase("schematic") && split[1] != null) {
                     fileToUpload = split[1];
@@ -82,8 +91,10 @@ public class UploadCommand implements CommandExecutor {
                     if (schematic.exists()) {
                         commandSender.sendMessage(prefix + "Uploading " + fileToUpload + ".schematic, link will be provided on completion!");
                         String path = serverDirectory + "/plugins/WorldEdit/schematics/" + fileToUpload + ".schematic";
+
                         File inputFile = new File(path);
-                        FileInputStream inputStream = null;
+                        FileInputStream inputStream;
+
                         try {
                             inputStream = new FileInputStream(inputFile);
                             try {

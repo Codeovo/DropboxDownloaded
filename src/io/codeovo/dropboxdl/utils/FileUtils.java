@@ -6,7 +6,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class FileUtils {
-    public static void zipFolder(String srcFolder, String destZipFile) throws Exception {
+    public static void zipFolder(String srcFolder, String destZipFile) throws IOException {
         FileOutputStream fileWriter = new FileOutputStream(destZipFile);
         ZipOutputStream zip = new ZipOutputStream(fileWriter);
 
@@ -18,7 +18,7 @@ public class FileUtils {
         fileWriter.close();
     }
 
-    private static void addFileToZip(String path, String srcFile, ZipOutputStream zip) throws Exception {
+    private static void addFileToZip(String path, String srcFile, ZipOutputStream zip) throws IOException {
         File folder = new File(srcFile);
 
         if (folder.isDirectory()) {
@@ -38,7 +38,7 @@ public class FileUtils {
         }
     }
 
-    private static void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) throws Exception {
+    private static void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) throws IOException {
         File folder = new File(srcFolder);
 
         for (String fileName : folder.list()) {

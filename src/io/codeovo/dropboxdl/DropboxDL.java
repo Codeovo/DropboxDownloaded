@@ -7,8 +7,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class DropboxDL extends JavaPlugin {
     private static DropboxDL dropboxDL;
 
-    public String pluginConsolePrefix = "Dropbox DL >> ";
-    public DbxClientV2 dbxClient;
+    private String pluginConsolePrefix = "Dropbox DL >> ";
+    private DbxClientV2 dbxClient;
 
     @Override
     public void onEnable() {
@@ -31,4 +31,6 @@ public class DropboxDL extends JavaPlugin {
     }
 
     public static DropboxDL getInstance() { return dropboxDL; }
+
+    public DbxClientV2 getClient() { return dbxClient; }
 }
