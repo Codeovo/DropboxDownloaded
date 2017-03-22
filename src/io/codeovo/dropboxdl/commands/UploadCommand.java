@@ -86,38 +86,42 @@ public class UploadCommand implements CommandExecutor {
                     }
                 } else if (split[0].equalsIgnoreCase("schematic") && split[1] != null) {
                     fileToUpload = split[1];
+                    final String path = serverDirectory + "/plugins/WorldEdit/schematics/" + fileToUpload + ".schematic";
 
-                    File schematic = new File(serverDirectory + "/plugins/WorldEdit/schematics/" + fileToUpload + ".schematic");
+                    File schematic = new File(path);
                     if (schematic.exists()) {
                         commandSender.sendMessage(prefix + "Uploading " + fileToUpload + ".schematic, link will be provided on completion!");
-                        String path = serverDirectory + "/plugins/WorldEdit/schematics/" + fileToUpload + ".schematic";
-
-                        File inputFile = new File(path);
-                        FileInputStream inputStream;
 
                         try {
-                            inputStream = new FileInputStream(inputFile);
-                            try {
-                                DbxEntry.File uploadedFile = null;
-                                try {
-                                    uploadedFile = downloadLink.client.uploadFile("/" + fileToUpload + ".schematic", DbxWriteMode.add(), inputFile.length(), inputStream);
-                                } catch (DbxException | IOException e) {
-                                }
-                            } finally {
-                                try {
-                                    inputStream.close();
-                                } catch (IOException e) {
-                                }
-                            }
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        }
+                            File inputFile = new File(path);
+                            final FileInputStream in = new FileInputStream(inputFile);
 
-                        try {
-                            commandSender.sendMessage(prefix + "Uploaded! Download at " + ChatColor.DARK_AQUA + downloadLink.client.createShareableUrl("/" + fileToUpload + ".schematic"));
-                        } catch (DbxException e) {
+                            Bukkit.getScheduler().runTaskAsynchronously(DropboxDL.getInstance(), new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        dropboxDL.getClient().files().uploadBuilder("/" + fileToUpload + ".schematic")
+                                                .withMode(WriteMode.OVERWRITE).uploadAndFinish(in);
+
+                                        commandSender.sendMessage(prefix + "Uploaded! Download at "
+                                                + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
+                                                .createSharedLinkWithSettings("/" + fileToUpload + ".zip",
+                                                        new SharedLinkSettings(RequestedVisibility.PUBLIC,
+                                                                null, null)));
+                                    } catch (DbxException | IOException e) {
+                                        commandSender.sendMessage(prefix
+                                                + "An error occurred, details logged to console!");
+                                        e.printStackTrace();
+                                    } finally {
+                                        try {
+                                            in.close();
+                                        } catch (IOException ignored) {}
+                                    }
+                                }
+                            });
+                        } catch (IOException e) {
+                            commandSender.sendMessage(prefix + "An error occurred, details logged to console!");
                             e.printStackTrace();
-                            commandSender.sendMessage(prefix + "A fatal error has occurred, check your console for more details.");
                         }
                     } else {
                         commandSender.sendMessage(prefix + "Schematic not found, check your parameters!");
