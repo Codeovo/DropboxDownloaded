@@ -1,11 +1,15 @@
 package io.codeovo.dropboxdl;
 
 import io.codeovo.dropboxdl.commands.UploadCommand;
+import io.codeovo.dropboxdl.metrics.Metrics;
 
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.IOException;
+import java.util.logging.Level;
 
 public class DropboxDL extends JavaPlugin {
     private static DropboxDL dropboxDL;
@@ -22,6 +26,7 @@ public class DropboxDL extends JavaPlugin {
         loadConfiguration();
         loadDropboxData();
         registerCommands();
+        loadMetrics();
         getLogger().info(pluginConsolePrefix + "Enabled.");
     }
 
@@ -48,6 +53,17 @@ public class DropboxDL extends JavaPlugin {
     private void registerCommands() {
         getLogger().info(pluginConsolePrefix + "Registering commands...");
         getCommand("upload").setExecutor(new UploadCommand(this));
+    }
+
+    private void loadMetrics() {
+        getLogger().info(pluginConsolePrefix + "Attempting metrics...");
+        try {
+            Metrics metrics = new Metrics(this);
+            metrics.start();
+        } catch (IOException e) {
+            getLogger().log(Level.WARNING, pluginConsolePrefix + "Metrics failed.");
+            e.printStackTrace();
+        }
     }
 
     public static DropboxDL getInstance() { return dropboxDL; }
