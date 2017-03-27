@@ -57,11 +57,24 @@ public class UploadCommand implements CommandExecutor {
                                         dropboxDL.getClient().files().uploadBuilder("/" + fileToUpload + ".zip")
                                                 .withMode(WriteMode.OVERWRITE).uploadAndFinish(in);
 
-                                        commandSender.sendMessage(prefix + "Uploaded! Download at "
-                                                + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
-                                                .createSharedLinkWithSettings("/" + fileToUpload + ".zip",
-                                                        new SharedLinkSettings(RequestedVisibility.PUBLIC,
-                                                                null, null)).getUrl());
+                                        try {
+                                            commandSender.sendMessage(prefix + "Uploaded! Download at "
+                                                    + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
+                                                    .createSharedLinkWithSettings("/" + fileToUpload + ".zip",
+                                                            new SharedLinkSettings(RequestedVisibility.PUBLIC,
+                                                                    null, null)).getUrl());
+                                        } catch (DbxException e) {
+                                            if (e.getMessage().contains("shared_link_already_exist")) {
+                                                commandSender.sendMessage(prefix + "Uploaded! Download at "
+                                                        + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
+                                                        .listSharedLinksBuilder().withPath("/" + fileToUpload + ".zip")
+                                                        .withDirectOnly(true).start().getLinks().get(0).getUrl());
+                                            } else {
+                                                commandSender.sendMessage(prefix
+                                                        + "An error occurred, details logged to console!");
+                                                e.printStackTrace();
+                                            }
+                                        }
                                     } catch (DbxException | IOException e) {
                                         commandSender.sendMessage(prefix
                                                 + "An error occurred, details logged to console!");
@@ -74,7 +87,7 @@ public class UploadCommand implements CommandExecutor {
                                 }
                             });
 
-                            worldModified.delete();
+                            FileUtils.deleteDirectory(worldModified);
                             inputFile.delete();
                         } else {
                             commandSender.sendMessage(prefix + "World not found, check your parameters!");
@@ -103,11 +116,24 @@ public class UploadCommand implements CommandExecutor {
                                         dropboxDL.getClient().files().uploadBuilder("/" + fileToUpload + ".schematic")
                                                 .withMode(WriteMode.OVERWRITE).uploadAndFinish(in);
 
-                                        commandSender.sendMessage(prefix + "Uploaded! Download at "
-                                                + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
-                                                .createSharedLinkWithSettings("/" + fileToUpload + ".zip",
-                                                        new SharedLinkSettings(RequestedVisibility.PUBLIC,
-                                                                null, null)).getUrl());
+                                        try {
+                                            commandSender.sendMessage(prefix + "Uploaded! Download at "
+                                                    + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
+                                                    .createSharedLinkWithSettings("/" + fileToUpload + ".schematic",
+                                                            new SharedLinkSettings(RequestedVisibility.PUBLIC,
+                                                                    null, null)).getUrl());
+                                        } catch (DbxException e) {
+                                            if (e.getMessage().contains("shared_link_already_exist")) {
+                                                commandSender.sendMessage(prefix + "Uploaded! Download at "
+                                                        + ChatColor.DARK_AQUA + dropboxDL.getClient().sharing()
+                                                        .listSharedLinksBuilder().withPath("/" + fileToUpload + ".schematic")
+                                                        .withDirectOnly(true).start().getLinks().get(0).getUrl());
+                                            } else {
+                                                commandSender.sendMessage(prefix
+                                                        + "An error occurred, details logged to console!");
+                                                e.printStackTrace();
+                                            }
+                                        }
                                     } catch (DbxException | IOException e) {
                                         commandSender.sendMessage(prefix
                                                 + "An error occurred, details logged to console!");
